@@ -8,26 +8,8 @@
 #include "../include/model.h"
 #include "../../modelobj/include/modelobj.h"
 #include "../../linalg/include/linalg.h"
-
-// must be aligned
-// void shapematch_render(Shapematch* sm, Modelobj* target) {
-// 	assert(sm->plen == target->v_len);
-// 	for (size_t idx = 0; idx < target->v_len; idx += 1) {
-// 		glm_vec3_copy(sm->ps[idx].pos, target->vs[idx]);
-// 	}
-// }
-
-// TODO: summation of covariance/cmass should use double?
-
-static void matprint(mat3 m) {
-	for (size_t i = 0; i < 3; i += 1) {
-		for (size_t j = 0; j < 3; j += 1) {
-			printf("%f ", m[i][j]);
-		}
-		printf("\n");
-	}
-	printf("\n");
-}
+#include "../../cglmh/include/debug.h"
+#include "../../cglmh/include/mat3.h"
 
 static void matsqrt(mat3 cov, mat3 sqr) {
 	mat3 t, vec;
@@ -35,35 +17,23 @@ static void matsqrt(mat3 cov, mat3 sqr) {
 	linalg_eigen((float*)cov, (float*)vec, (float*)val);
 	if (!(val[0] >= 0.0f && val[1] >= 0.0f && val[2] >= 0.0f)) {
 		printf("error: bad eigenvalue of positive semifinite\n");
-		printf("%f %f %f\n", val[0], val[1], val[2]);
+		cglmh_debug_vec3(val);
 		return;
 	}
 	glm_mat3_inv(vec, t); // vec * sqrt * t=inv
-	sqr[0][0] = sqrtf(val[0]);
-	sqr[1][1] = sqrtf(val[1]);
-	sqr[2][2] = sqrtf(val[2]);
+	cglmh_mat3_diagonal(val, sqr);
 	glm_mat3_mul(t, sqr, sqr);
 	glm_mat3_mul(sqr, vec, sqr);
-	if (0) { // print the error of matsqrt
-		mat3 chk;
-		glm_mat3_mul(sqr, sqr, chk);
-		float error = 0;
-		for (size_t i = 0; i < 9; i += 1) {
-			float diff = ((float*)chk)[i] - ((float*)cov)[i];
-			error += diff * diff;
-		}
-		printf("%f\n", error);
-	}
 }
 
 static void shapematch_step1(Shapematch* sm) {
 	for (size_t idx = 0; idx < sm->plen; idx += 1) {
 		ShapematchParticle* p = &sm->ps[idx];
-		if (p->pos[1] < 0.0) {
+		if (p->pos[1] < 0.0f) {
 			// float yspd = p->pos[1] - p->pps[1];
-			p->pos[1] = 0.0;
+			p->pos[1] = 0.0f;
 			// p->pps[1] = yspd; // bounce
-			p->pps[1] = 0.0;
+			p->pps[1] = 0.0f;
 			p->pps[0] = p->pos[0];
 			p->pps[2] = p->pos[2];
 		}
@@ -91,14 +61,12 @@ void shapematch_step(Shapematch* sm) {
 		glm_vec3_sub(p->pos, cmass, r1);
 		float a = r1[0]; float b = r1[1]; float c = r1[2];
 		float x = p->r0[0]; float y = p->r0[1]; float z = p->r0[2];
-		float dcov[9] = {
-			a * x, b * x, c * x,
-			a * y, b * y, c * y,
-			a * z, b * z, c * z,
+		mat3 dcov = {
+			{a * x, b * x, c * x},
+			{a * y, b * y, c * y},
+			{a * z, b * z, c * z},
 		};
-		for (size_t idy = 0; idy < 9; idy += 1) {
-			((float*)cov)[idy] += dcov[idy];
-		}
+		cglmh_mat3_add(cov, dcov, cov);
 	}
 	mat3 t, sqr = {0};
 	glm_mat3_transpose_to(cov, t);
@@ -115,7 +83,7 @@ void shapematch_step(Shapematch* sm) {
 		glm_vec3_scale(dp, 0.5f, dp); // the rigidity compliance
 		glm_vec3_add(p->pos, dp, p->pos);
 	}
-};
+}
 
 void shapematch_cmass(Shapematch* sm, vec3 cmass) {
 	glm_vec3_zero(cmass);
@@ -127,6 +95,16 @@ void shapematch_cmass(Shapematch* sm, vec3 cmass) {
 }
 
 void shapematch_init(Shapematch* sm, Modelobj* model) {
+	static const size_t WARN_LENGTH = 1000;
+	if (model->v_len > WARN_LENGTH) {
+		// though cmass/cov precision can be solved kahan addition,
+		// for physical model we generally avoid to have many points.
+		// instead of solving precision, user should
+		// consider separate render and physical model
+		// and determine the rest vertex positions by interpolation
+		printf("model contains too many vertices %zu>%zu\n",
+			model->v_len, WARN_LENGTH);
+	}
 	sm->plen = model->v_len;
 	sm->ps = calloc(model->v_len, sizeof(ShapematchParticle));
 	for (size_t idx = 0; idx < model->v_len; idx += 1) {
