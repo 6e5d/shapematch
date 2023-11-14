@@ -1,15 +1,15 @@
-#include <math.h>
 #include <assert.h>
-#include <stddef.h>
 #include <cglm/cglm.h>
-#include <stdlib.h>
+#include <math.h>
+#include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-#include "../include/model.h"
-#include "../../modelobj/include/modelobj.h"
-#include "../../linalg/include/linalg.h"
 #include "../../cglmh/include/debug.h"
 #include "../../cglmh/include/mat3.h"
+#include "../../linalg/include/linalg.h"
+#include "../../modelobj/include/modelobj.h"
+#include "../include/model.h"
 
 static void matsqrt(mat3 cov, mat3 sqr) {
 	mat3 t, vec;
@@ -21,7 +21,9 @@ static void matsqrt(mat3 cov, mat3 sqr) {
 		return;
 	}
 	glm_mat3_inv(vec, t); // vec * sqrt * t=inv
-	cglmh_mat3_diagonal(val, sqr);
+	sqr[0][0] = sqrtf(val[0]);
+	sqr[1][1] = sqrtf(val[1]);
+	sqr[2][2] = sqrtf(val[2]);
 	glm_mat3_mul(t, sqr, sqr);
 	glm_mat3_mul(sqr, vec, sqr);
 }
@@ -52,11 +54,9 @@ void shapematch_step(Shapematch* sm) {
 	shapematch_step1(sm);
 	vec3 cmass = {0};
 	shapematch_cmass(sm, cmass);
-	// printf("%f %f\n", cmass[0], cmass[2]);
 	mat3 cov = {0};
 	for (size_t idx = 0; idx < sm->plen; idx += 1) {
 		ShapematchParticle* p = &sm->ps[idx];
-		// if (idx == 0) {printf("%f\n", p->pos[0])}
 		vec3 r1 = {0};
 		glm_vec3_sub(p->pos, cmass, r1);
 		float a = r1[0]; float b = r1[1]; float c = r1[2];
@@ -80,7 +80,7 @@ void shapematch_step(Shapematch* sm) {
 		glm_mat3_mulv(t, p->r0, dp);
 		glm_vec3_add(dp, cmass, dp);
 		glm_vec3_sub(dp, p->pos, dp);
-		glm_vec3_scale(dp, 0.5f, dp); // the rigidity compliance
+		glm_vec3_scale(dp, 0.6f, dp); // the rigidity compliance
 		glm_vec3_add(p->pos, dp, p->pos);
 	}
 }

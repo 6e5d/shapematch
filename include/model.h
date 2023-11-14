@@ -1,7 +1,7 @@
 #include <stddef.h>
 
-#include "../include/particle.h"
 #include "../../modelobj/include/modelobj.h"
+#include "../include/particle.h"
 
 typedef struct {
 	size_t plen;
