@@ -32,9 +32,6 @@ static void shapematch_step1(Shapematch* sm) {
 	for (size_t idx = 0; idx < sm->plen; idx += 1) {
 		ShapematchParticle* p = &sm->ps[idx];
 		if (p->pos[1] < 0.0f) {
-			// float yspd = p->pos[1] - p->pps[1];
-			p->pos[1] = 0.0f;
-			// p->pps[1] = yspd; // bounce
 			p->pps[1] = 0.0f;
 			p->pps[0] = p->pos[0];
 			p->pps[2] = p->pos[2];
