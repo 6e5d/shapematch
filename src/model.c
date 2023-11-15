@@ -32,7 +32,7 @@ static void shapematch_step1(Shapematch* sm) {
 	for (size_t idx = 0; idx < sm->plen; idx += 1) {
 		ShapematchParticle* p = &sm->ps[idx];
 		if (p->pos[1] < 0.0f) {
-			p->pps[1] = 0.0f;
+			p->pos[1] = 0.0f;
 			p->pps[0] = p->pos[0];
 			p->pps[2] = p->pos[2];
 		}
@@ -68,7 +68,7 @@ void shapematch_step(Shapematch* sm) {
 	mat3 t, sqr = {0};
 	glm_mat3_transpose_to(cov, t);
 	glm_mat3_mul(t, cov, t);
-	matsqrt(t, sqr); // sqr is the rotation part to be excluded
+	matsqrt(t, sqr); // sqr is the symmetric part to be excluded
 	glm_mat3_inv(sqr, t);
 	glm_mat3_mul(cov, t, t);
 	for (size_t idx = 0; idx < sm->plen; idx += 1) {
