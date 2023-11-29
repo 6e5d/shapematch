@@ -1,3 +1,6 @@
+#ifndef INCLUDEGUARD_SHAPEMATCH_PARTICLEH
+#define INCLUDEGUARD_SHAPEMATCH_PARTICLEH
+
 #include <cglm/cglm.h>
 
 typedef struct {
@@ -6,3 +9,5 @@ typedef struct {
 	vec3 r0;
 	float mass;
 } ShapematchParticle;
+
+#endif
