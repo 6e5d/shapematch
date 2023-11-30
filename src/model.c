@@ -1,15 +1,10 @@
-#include <assert.h>
 #include <cglm/cglm.h>
 #include <math.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
 
-#include "../../cglmh/include/debug.h"
-#include "../../cglmh/include/mat3.h"
+#include "../../cglmh/include/cglmh.h"
 #include "../../linalg/include/linalg.h"
 #include "../../modelobj/include/modelobj.h"
-#include "../include/model.h"
+#include "../include/shapematch.h"
 
 static void matsqrt(mat3 cov, mat3 sqr) {
 	mat3 t, vec;

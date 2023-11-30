@@ -1,14 +1,20 @@
-#ifndef INCLUDEGUARD_SHAPEMATCH_MODELH
-#define INCLUDEGUARD_SHAPEMATCH_MODELH
+#ifndef INCLUDEGUARD_SHAPEMATCH
+#define INCLUDEGUARD_SHAPEMATCH
 
-#include <stddef.h>
+#include <cglm/cglm.h>
 
 #include "../../modelobj/include/modelobj.h"
-#include "../include/particle.h"
 
 typedef struct {
-size_t plen;
-ShapematchParticle* ps;
+	float* pos;
+	vec3 pps;
+	vec3 r0;
+	float mass;
+} ShapematchParticle;
+
+typedef struct {
+	size_t plen;
+	ShapematchParticle* ps;
 } Shapematch;
 
 void shapematch_cmass(Shapematch* sm, vec3 cmass);
