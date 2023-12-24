@@ -1,7 +1,7 @@
 #include <cglm/cglm.h>
 #include <math.h>
 
-#include "../../cglmh/include/cglmh.h"
+#include "../../cglmh/build/cglmh.h"
 #include "../../linalg/include/linalg.h"
 #include "../../modelobj/include/modelobj.h"
 #include "../include/shapematch.h"
@@ -14,7 +14,7 @@ static void matsqrt(CglmMat3 cov, CglmMat3 sqr) {
 	linalg_eigen((float*)cov, (float*)vec, (float*)val);
 	if (!(val[0] >= 0.0f && val[1] >= 0.0f && val[2] >= 0.0f)) {
 		printf("error: bad eigenvalue of positive semifinite\n");
-		cglmh_debug_vec3(val);
+		com_6e5d_cglmh_debug_vec3(val);
 		return;
 	}
 	// vec * sqrt * t=inv
@@ -61,7 +61,7 @@ void shapematch_step(Shapematch* sm) {
 			{a * y, b * y, c * y},
 			{a * z, b * z, c * z},
 		};
-		cglmh_mat3_add(cov, dcov, cov);
+		com_6e5d_cglmh_mat3_add(cov, dcov, cov);
 	}
 	CglmMat3 t, sqr = {0};
 	glm_mat3_transpose_to(cov, t);
