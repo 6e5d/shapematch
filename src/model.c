@@ -7,6 +7,8 @@
 #include "../include/shapematch.h"
 
 #define WARN_LENGTH ((size_t)1000)
+#define CglmMat3 mat3
+#define CglmVec3 vec3
 
 static void matsqrt(CglmMat3 cov, CglmMat3 sqr) {
 	CglmMat3 t, vec;
