@@ -2,18 +2,16 @@
 #include <math.h>
 
 #include "../../cglmh/build/cglmh.h"
-#include "../../linalg/include/linalg.h"
+#include "../../linalg/build/linalg.h"
 #include "../../modelobj/include/modelobj.h"
 #include "../include/shapematch.h"
 
-#define WARN_LENGTH ((size_t)1000)
-#define CglmMat3 mat3
-#define CglmVec3 vec3
+#define WARN_LENGTH 1000
 
 static void matsqrt(CglmMat3 cov, CglmMat3 sqr) {
 	CglmMat3 t, vec;
 	CglmVec3 val;
-	linalg_eigen((float*)cov, (float*)vec, (float*)val);
+	linalg(eigen)((float*)cov, (float*)vec, (float*)val);
 	if (!(val[0] >= 0.0f && val[1] >= 0.0f && val[2] >= 0.0f)) {
 		printf("error: bad eigenvalue of positive semifinite\n");
 		com_6e5d_cglmh_debug_vec3(val);
@@ -28,9 +26,9 @@ static void matsqrt(CglmMat3 cov, CglmMat3 sqr) {
 	glm_mat3_mul(sqr, vec, sqr);
 }
 
-static void shapematch_step1(Shapematch* sm) {
+static void step1(Shapematch()* sm) {
 	for (size_t idx = 0; idx < sm->plen; idx += 1) {
-		ShapematchParticle* p = &sm->ps[idx];
+		Shapematch(Particle)* p = &sm->ps[idx];
 		if (p->pos[1] < 0.0f) {
 			p->pos[1] = 0.0f;
 			p->pps[0] = p->pos[0];
@@ -47,13 +45,13 @@ static void shapematch_step1(Shapematch* sm) {
 	}
 }
 
-void shapematch_step(Shapematch* sm) {
-	shapematch_step1(sm);
+void shapematch(step)(Shapematch()* sm) {
+	step1(sm);
 	CglmVec3 cmass = {0};
-	shapematch_cmass(sm, cmass);
+	shapematch(cmass)(sm, cmass);
 	CglmMat3 cov = {0};
 	for (size_t idx = 0; idx < sm->plen; idx += 1) {
-		ShapematchParticle* p = &sm->ps[idx];
+		Shapematch(Particle)* p = &sm->ps[idx];
 		CglmVec3 r1 = {0};
 		glm_vec3_sub(p->pos, cmass, r1);
 		float a = r1[0]; float b = r1[1]; float c = r1[2];
@@ -73,7 +71,7 @@ void shapematch_step(Shapematch* sm) {
 	glm_mat3_inv(sqr, t);
 	glm_mat3_mul(cov, t, t);
 	for (size_t idx = 0; idx < sm->plen; idx += 1) {
-		ShapematchParticle* p = &sm->ps[idx];
+		Shapematch(Particle)* p = &sm->ps[idx];
 		CglmVec3 dp;
 		glm_mat3_mulv(t, p->r0, dp);
 		glm_vec3_add(dp, cmass, dp);
@@ -84,41 +82,41 @@ void shapematch_step(Shapematch* sm) {
 	}
 }
 
-void shapematch_cmass(Shapematch* sm, CglmVec3 cmass) {
+void shapematch(cmass)(Shapematch()* sm, CglmVec3 cmass) {
 	glm_vec3_zero(cmass);
 	for (size_t idx = 0; idx < sm->plen; idx += 1) {
-		ShapematchParticle* p = &sm->ps[idx];
+		Shapematch(Particle)* p = &sm->ps[idx];
 		glm_vec3_add(p->pos, cmass, cmass);
 	}
 	glm_vec3_scale(cmass, 1.0f / (float)sm->plen, cmass);
 }
 
-void shapematch_init(Shapematch* sm, Modelobj* model) {
-	if (model->v_len > WARN_LENGTH) {
+void shapematch(init)(Shapematch()* sm, Modelobj()* model) {
+	if (model->v_len > (size_t)WARN_LENGTH) {
 		// though cmass/cov precision can be solved kahan addition,
 		// for physical model we generally avoid to have many points.
 		// instead of solving precision, user should
 		// consider separate render and physical model
 		// and determine the rest vertex positions by interpolation
-		printf("model contains too many vertices %zu>%zu\n",
+		printf("model contains too many vertices %zu>%d\n",
 			model->v_len, WARN_LENGTH);
 	}
 	sm->plen = model->v_len;
-	sm->ps = calloc(model->v_len, sizeof(ShapematchParticle));
+	sm->ps = calloc(model->v_len, sizeof(Shapematch(Particle)));
 	for (size_t idx = 0; idx < model->v_len; idx += 1) {
-		ShapematchParticle* p = &sm->ps[idx];
+		Shapematch(Particle)* p = &sm->ps[idx];
 		p->mass = 1.0f;
 		p->pos = model->vs[idx];
 		glm_vec3_copy(p->pos, p->pps);
 	}
 	CglmVec3 cmass = {0};
-	shapematch_cmass(sm, cmass);
+	shapematch(cmass)(sm, cmass);
 	for (size_t idx = 0; idx < model->v_len; idx += 1) {
-		ShapematchParticle* p = &sm->ps[idx];
+		Shapematch(Particle)* p = &sm->ps[idx];
 		glm_vec3_sub(p->pos, cmass, p->r0);
 	}
 }
 
-void shapematch_deinit(Shapematch* sm) {
+void shapematch(deinit)(Shapematch()* sm) {
 	free(sm->ps);
 }

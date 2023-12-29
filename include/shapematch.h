@@ -4,22 +4,24 @@
 #include <cglm/cglm.h>
 
 #include "../../modelobj/include/modelobj.h"
+#define CglmMat3 mat3
+#define CglmVec3 vec3
 
 typedef struct {
 	float* pos;
-	vec3 pps;
-	vec3 r0;
+	CglmVec3 pps;
+	CglmVec3 r0;
 	float mass;
-} ShapematchParticle;
+} Shapematch(Particle);
 
 typedef struct {
 	size_t plen;
-	ShapematchParticle* ps;
-} Shapematch;
+	Shapematch(Particle)* ps;
+} Shapematch();
 
-void shapematch_cmass(Shapematch* sm, vec3 cmass);
-void shapematch_init(Shapematch* sm, Modelobj* model);
-void shapematch_step(Shapematch* sm);
-void shapematch_deinit(Shapematch* sm);
+void shapematch(cmass)(Shapematch()* sm, CglmVec3 cmass);
+void shapematch(init)(Shapematch()* sm, Modelobj()* model);
+void shapematch(step)(Shapematch()* sm);
+void shapematch(deinit)(Shapematch()* sm);
 
 #endif
